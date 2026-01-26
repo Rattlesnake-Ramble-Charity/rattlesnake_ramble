@@ -26,6 +26,15 @@ class RaceEntriesController < ApplicationController
     race_entry.paid = true
     if race_entry.save
       flash[:success] = "Get ready to Ramble, because you are entered!"
+      RaceMailer.payment_acknowledgment(race_entry).deliver_later
+
+      race_date = race_entry.race_edition.date
+      if race_date.present?
+        race_time = race_date.to_time.in_time_zone(race_entry.race_edition.home_time_zone)
+        ReminderJob.set(wait_until: race_time - 7.days).perform_later(race_entry.id, "one week away")
+        ReminderJob.set(wait_until: race_time - 1.day).perform_later(race_entry.id, "tomorrow")
+      end
+
       redirect_to race_edition_path(race_entry.race_edition)
     end
   end
