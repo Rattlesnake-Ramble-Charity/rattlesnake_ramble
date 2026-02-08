@@ -165,7 +165,7 @@ class RaceEditionsController < ApplicationController
     attrs = {}
     attrs[:merchandise_size] = params[:merchandise_size] if params[:merchandise_size].present?
 
-    RaceEntry.create!(
+    entry = RaceEntry.create!(
       race_edition: @race_edition,
       racer: racer,
       paid: true,
