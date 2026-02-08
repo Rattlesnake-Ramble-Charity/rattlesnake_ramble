@@ -46,7 +46,9 @@ Rails.application.configure do
     user_name: ENV["GMAIL_USERNAME"],
     password: ENV["GMAIL_APP_PASSWORD"],
     authentication: :plain,
-    enable_starttls_auto: true
+    enable_starttls_auto: true,
+    openssl_verify_mode: 'none'
+
     # dev-only workaround if you hit cert errors:
     # openssl_verify_mode: 'none'
   }
