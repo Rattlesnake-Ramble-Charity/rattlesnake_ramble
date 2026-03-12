@@ -5,11 +5,11 @@ This is the repository for the Rattlesnake Ramble website, hosted at https://www
 Local setup requires the following:
 
 * Ruby version: 3.2.5
-* Rails version: 6.1
-* Postgres 11 (16 is the latest version)
+* Rails version: 7.0.8.1
+* PostgreSQL 16 (or compatible version)
 
-The actual versions used in this project can be seen in the Gemfile
-and the .ruby-version file.
+The actual versions used in this project can be seen in the Gemfile,
+Gemfile.lock, and the .ruby-version file.
 
 This project uses rbenv to manage Ruby versions. If you don't have rbenv installed, you can install it with Homebrew:
 
