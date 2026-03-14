@@ -50,6 +50,49 @@ RSpec.describe RaceEntry, type: :model do
     end
   end
 
+  describe 'automatic bib assignment' do
+    it 'assigns and increments the male bib number for full course entries' do
+      race_edition = create(:race_edition, :full_course, next_male_bib_number: 101, next_female_bib_number: 201)
+      race_entry = create(:race_entry, race_edition: race_edition, racer: create(:racer, :male))
+
+      expect(race_entry.bib_number).to eq(101)
+      expect(race_edition.reload.next_male_bib_number).to eq(102)
+    end
+
+    it 'assigns and increments the female bib number for full course entries' do
+      race_edition = create(:race_edition, :full_course, next_male_bib_number: 101, next_female_bib_number: 201)
+      race_entry = create(:race_entry, race_edition: race_edition, racer: create(:racer, :female))
+
+      expect(race_entry.bib_number).to eq(201)
+      expect(race_edition.reload.next_female_bib_number).to eq(202)
+    end
+
+    it 'assigns and increments the kids bib number for kids race entries' do
+      race_edition = create(:race_edition, :kids_race, next_kids_bib_number: 301)
+      race_entry = create(:race_entry, race_edition: race_edition, racer: create(:racer, :female))
+
+      expect(race_entry.bib_number).to eq(301)
+      expect(race_edition.reload.next_kids_bib_number).to eq(302)
+    end
+
+    it 'skips bib numbers that are already used in the edition' do
+      race_edition = create(:race_edition, :full_course, next_male_bib_number: 101, next_female_bib_number: 201)
+      create(:race_entry, race_edition: race_edition, racer: create(:racer, :male), bib_number: 101)
+
+      race_entry = create(:race_entry, race_edition: race_edition, racer: create(:racer, :male))
+
+      expect(race_entry.bib_number).to eq(102)
+      expect(race_edition.reload.next_male_bib_number).to eq(103)
+    end
+
+    it 'leaves bib_number blank when no next bib number is configured' do
+      race_edition = create(:race_edition, :full_course, next_male_bib_number: nil, next_female_bib_number: nil)
+      race_entry = create(:race_entry, race_edition: race_edition, racer: create(:racer, :male))
+
+      expect(race_entry.bib_number).to be_nil
+    end
+  end
+
   describe 'time-related virtual attributes' do
     real_attributes = [:predicted_time, :time]
 

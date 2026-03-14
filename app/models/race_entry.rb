@@ -18,6 +18,7 @@ class RaceEntry < ActiveRecord::Base
                           message: 'may not be duplicated within a race edition'
 
   after_initialize :default_values
+  before_validation :assign_bib_number, on: :create, if: -> { bib_number.blank? }
 
   attr_accessor :category_name
   delegate :date, to: :race_edition
@@ -50,5 +51,15 @@ class RaceEntry < ActiveRecord::Base
 
   def name
     "#{racer.name}'s entry into #{race_edition.name}"
+  end
+
+  private
+
+  def assign_bib_number
+    return unless racer && race_edition
+
+    race_edition.with_lock do
+      self.bib_number = race_edition.assign_next_bib_number_for!(racer)
+    end
   end
 end

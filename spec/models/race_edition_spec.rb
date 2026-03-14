@@ -35,6 +35,12 @@ RSpec.describe RaceEdition, type: :model do
       expect(race_edition).to be_invalid
       expect(race_edition.errors.full_messages).to include('Race has already been taken')
     end
+
+    it 'is invalid with a non-positive next male bib number' do
+      race_edition = build_stubbed(:race_edition, next_male_bib_number: 0)
+      expect(race_edition).to be_invalid
+      expect(race_edition.errors.full_messages).to include('Next male bib number must be greater than 0')
+    end
   end
 
   describe '#default_start_time_female_local= and #default_start_time_male_local=' do
@@ -71,6 +77,16 @@ RSpec.describe RaceEdition, type: :model do
         expect(subject.default_start_time_female).to eq('2020-09-12 07:45:00-0600'.to_datetime)
         expect(subject.default_start_time_male).to eq('2020-09-12 07:30:00-0600'.to_datetime)
       end
+    end
+  end
+
+  describe '#kids_race?' do
+    it 'returns true for kids race editions' do
+      expect(build_stubbed(:race_edition, :kids_race)).to be_kids_race
+    end
+
+    it 'returns false for full course editions' do
+      expect(build_stubbed(:race_edition, :full_course)).not_to be_kids_race
     end
   end
 end
