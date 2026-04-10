@@ -5,7 +5,7 @@
     <%= form_for @race_edition do |f| %>
       <%= f.label :race %>
       <%= f.select :race_id, Race.all.map { |race| [race.name, race.id] },
-                   {prompt: true}, {class: "form-control dropdown-select-field"} %>
+                   {prompt: true}, {class: "form-control dropdown-select-field", id: "race_edition_race_id"} %>
 
       <%= f.label :date %>
       <%= datepicker_input(form: f,
@@ -22,6 +22,21 @@
 
       <%= f.label 'Female default start time' %>
       <%= f.text_field :default_start_time_female_local, placeholder: 'hh:mm' %>
+
+      <% kids_race_selected = @race_edition.kids_race? %>
+
+      <div id="full-course-bib-fields" style="<%= 'display: none;' if kids_race_selected %>">
+        <%= f.label 'Male bib number' %>
+        <%= f.number_field :next_male_bib_number, min: 1 %>
+
+        <%= f.label 'Female bib number' %>
+        <%= f.number_field :next_female_bib_number, min: 1 %>
+      </div>
+
+      <div id="kids-bib-fields" style="<%= 'display: none;' unless kids_race_selected %>">
+        <%= f.label 'Next available bib number' %>
+        <%= f.number_field :next_kids_bib_number, min: 1 %>
+      </div>
 
       <%= f.label 'Accepting Entries' %>
       <%= f.check_box :accepting_entries %>
@@ -48,3 +63,37 @@
     <% end %>
   </div>
 </div>
+
+<script>
+  (function() {
+    function selectedRaceText(raceSelect) {
+      var option = raceSelect.options[raceSelect.selectedIndex];
+      return option ? option.text : '';
+    }
+
+    function toggleBibFields() {
+      var raceSelect = document.getElementById('race_edition_race_id');
+      var fullCourseFields = document.getElementById('full-course-bib-fields');
+      var kidsFields = document.getElementById('kids-bib-fields');
+      if (!raceSelect || !fullCourseFields || !kidsFields) return;
+
+      var selectedText = selectedRaceText(raceSelect);
+      var isKidsRace = selectedText.indexOf('Kids Race') !== -1;
+
+      fullCourseFields.style.display = isKidsRace ? 'none' : '';
+      kidsFields.style.display = isKidsRace ? '' : 'none';
+    }
+
+    function bindBibFieldToggle() {
+      var raceSelect = document.getElementById('race_edition_race_id');
+      if (!raceSelect) return;
+
+      toggleBibFields();
+      raceSelect.removeEventListener('change', toggleBibFields);
+      raceSelect.addEventListener('change', toggleBibFields);
+    }
+
+    document.addEventListener('turbolinks:load', bindBibFieldToggle);
+    document.addEventListener('DOMContentLoaded', bindBibFieldToggle);
+  })();
+</script>

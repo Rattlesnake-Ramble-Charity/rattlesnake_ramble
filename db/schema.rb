@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_11_06_220220) do
+ActiveRecord::Schema[7.0].define(version: 2026_03_13_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -57,6 +57,9 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_06_220220) do
     t.string "merchandise_description"
     t.string "merchandise_image_file_name"
     t.integer "merchandise_price"
+    t.integer "next_male_bib_number"
+    t.integer "next_female_bib_number"
+    t.integer "next_kids_bib_number"
     t.index ["race_id", "date"], name: "index_race_editions_on_race_id_and_date", unique: true
     t.index ["race_id"], name: "index_race_editions_on_race_id"
     t.index ["slug"], name: "index_race_editions_on_slug", unique: true
