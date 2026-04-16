@@ -31,9 +31,6 @@
   <% end %>
 
   <%= race_edition_form.fields_for :race_entries, @race_entry do |race_entry_fields| %>
-    <%= race_entry_fields.label :predicted_finish_time %>
-    <%= race_entry_fields.text_field :elapsed_predicted_time, placeholder: 'h:mm:ss' %>
-
     <% if @race_edition.selling_merchandise? %>
       <h3>
         <%= race_entry_fields.label @race_edition.merchandise_description %>
