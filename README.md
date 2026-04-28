@@ -4,8 +4,8 @@ This is the repository for the Rattlesnake Ramble website, hosted at https://www
 
 Local setup requires the following:
 
-* Ruby version: 3.2.5
-* Rails version: 7.0.8.1
+* Ruby version: 3.3.11
+* Rails version: 7.1.6
 * PostgreSQL 16 (or compatible version)
 
 The actual versions used in this project can be seen in the Gemfile,
