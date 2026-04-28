@@ -35,6 +35,3 @@
 
 # Ignore environment files that may contain sensitive data
 .env
-
-# Ignore Claude Code superpowers scratch (plans, notes — local-only)
-/docs/superpowers/
