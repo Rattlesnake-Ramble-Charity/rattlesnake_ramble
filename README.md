@@ -4,36 +4,57 @@ This is the repository for the Rattlesnake Ramble website, hosted at https://www
 
 Local setup requires the following:
 
-* Ruby version: 3.2.5
-* Rails version: 7.0.8.1
+* Ruby version: 3.3
+* Rails version: 7.1
 * PostgreSQL 16 (or compatible version)
 
-The actual versions used in this project can be seen in the Gemfile,
-Gemfile.lock, and the .ruby-version file.
+The exact pinned versions live in `Gemfile`, `Gemfile.lock`, `.ruby-version`,
+and `.tool-versions`.
 
-This project uses rbenv to manage Ruby versions. If you don't have rbenv installed, you can install it with Homebrew:
+This project supports either rbenv or asdf for managing Ruby versions —
+both read `.ruby-version`, and asdf also reads `.tool-versions`. Pick whichever
+you already use; if you don't have either, asdf is the more flexible choice
+because it can manage other languages (Node, etc.) too.
+
+### Option 1: rbenv
+
+Install via Homebrew:
 
 ```bash
 brew install rbenv
 ```
 
-The version for the project is specified in the `.ruby-version` file of this project. To install the correct Ruby
-version, run:
+Install the project's Ruby version (reads `.ruby-version`):
 
 ```bash
 rbenv install
 ```
 
-Then, make sure to initialize rbenv in your shell:
-
-```bash
-rbenv init
-```
-
-Also, put this in your `.zshrc`:
+Initialize rbenv in your shell by adding this to `~/.zshrc`:
 
 ```bash
 eval "$(rbenv init - zsh)"
+```
+
+### Option 2: asdf
+
+Install via Homebrew:
+
+```bash
+brew install asdf
+```
+
+Add the asdf shims directory to your `PATH` by adding this to `~/.zshrc`:
+
+```bash
+export PATH="$HOME/.asdf/shims:$PATH"
+```
+
+Add the Ruby plugin and install the project's Ruby version (reads `.tool-versions`):
+
+```bash
+asdf plugin add ruby
+asdf install ruby
 ```
 
 ## Database creation
