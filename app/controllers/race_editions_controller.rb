@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class RaceEditionsController < ApplicationController
-  before_action :authenticate_user!, except: [:index, :show, :enter, :create_entry, :payment_success, :payment_cancelled]
+  before_action :authenticate_user!, except: [:index, :show, :enter, :create_entry, :checkout, :create_paypal_order, :capture_paypal_order, :payment_success, :payment_cancelled]
   before_action :set_race_edition, except: [:index, :new, :create]
 
   def index
@@ -70,8 +70,12 @@ class RaceEditionsController < ApplicationController
     merch_size = provided_race_entry_attributes['merchandise_size'].presence
 
     if @racer.save
-      # hand the user to PayPal; on return we'll create the RaceEntry as paid: true
-      redirect_to paypal_checkout_url_for(@racer, merch_size), allow_other_host: true
+      session[:pending_checkout] = {
+        'racer_id'         => @racer.id,
+        'merchandise_size' => merch_size,
+        'race_edition_id'  => @race_edition.id
+      }
+      redirect_to checkout_race_edition_path(@race_edition)
     else
       # re-render form with errors; ensure @race_entry exists for fields_for
       default_race_entry_attributes = { race_edition: @race_edition, racer: @racer }
@@ -80,6 +84,63 @@ class RaceEditionsController < ApplicationController
       @racer.errors.merge!(@race_entry.errors)
       render 'enter'
     end
+  end
+
+  def checkout
+    pending = session[:pending_checkout]
+    unless pending && pending['race_edition_id'] == @race_edition.id
+      redirect_to enter_race_edition_path(@race_edition) and return
+    end
+    @racer = Racer.find(pending['racer_id'])
+    @total = @race_edition.entry_fee
+    @total += @race_edition.merchandise_price if pending['merchandise_size'].present?
+  end
+
+  def create_paypal_order
+    pending = session[:pending_checkout]
+    unless pending && pending['race_edition_id'] == @race_edition.id
+      render json: { error: 'No pending checkout' }, status: :unprocessable_entity and return
+    end
+
+    total = @race_edition.entry_fee
+    total += @race_edition.merchandise_price if pending['merchandise_size'].present?
+
+    result = PaypalService.new.create_order(
+      amount:     total,
+      item_name:  @race_edition.name,
+      invoice_id: "RaceEdition#{@race_edition.id}-Racer#{pending[:racer_id]}"
+    )
+
+    render json: { order_id: result['id'] }
+  end
+
+  def capture_paypal_order
+    pending = session[:pending_checkout]
+    unless pending && pending['race_edition_id'] == @race_edition.id
+      render json: { error: 'No pending checkout' }, status: :unprocessable_entity and return
+    end
+
+    result = PaypalService.new.capture_order(params[:order_id])
+
+    unless result['status'] == 'COMPLETED'
+      render json: { error: 'Payment capture failed' }, status: :unprocessable_entity and return
+    end
+
+    racer = Racer.find(pending['racer_id'])
+    attrs = {}
+    attrs[:merchandise_size] = pending['merchandise_size'] if pending['merchandise_size'].present?
+
+    entry = RaceEntry.create!(
+      race_edition: @race_edition,
+      racer:        racer,
+      paid:         true,
+      **attrs
+    )
+
+    session.delete(:pending_checkout)
+    send_payment_ack_and_schedule_reminders(entry)
+
+    render json: { redirect_url: race_edition_path(@race_edition) }
   end
 
   def paypal_url(race_entry)
@@ -114,40 +175,6 @@ class RaceEditionsController < ApplicationController
 
   helper_method :paypal_url
 
-  def paypal_checkout_url_for(racer, merch_size)
-    total_value = @race_edition.entry_fee
-    total_value += @race_edition.merchandise_price if merch_size.present?
-
-    values = {
-      business: "bwright@rattlesnakeramble.org",
-      cmd: "_xclick",
-      upload: 1,
-
-      # Return to the RaceEdition, not a RaceEntry (we don’t have an entry yet)
-      return: "#{Rails.application.secrets.app_host}#{payment_success_race_edition_path(@race_edition)}?racer_id=#{racer.id}&merchandise_size=#{merch_size}",
-      cancel_return: "#{Rails.application.secrets.app_host}#{payment_cancelled_race_edition_path(@race_edition)}",
-
-      # Use an invoice that identifies racer + edition (no RaceEntry id yet)
-      invoice: "RaceEdition#{@race_edition.id}-Racer#{racer.id}",
-
-      amount: total_value,
-      item_name: @race_edition.name,
-      quantity: 1,
-      currency_code: "USD",
-      shipping: 0,
-      handling: 0,
-      no_shipping: 1,
-      no_note: 1,
-    }
-
-    # "#{Rails.application.secrets.paypal_host}/cgi-bin/webscr?" + values.to_query
-    paypal_url = "#{Rails.application.secrets.paypal_host}/cgi-bin/webscr?" + values.to_query
-    Rails.logger.debug "From RaceEditionsController>>paypal_checkout_url_for: #{paypal_url}"
-    paypal_url
-  end
-
-  helper_method :paypal_checkout_url_for
-
   def racer_emails
     all_entries = @race_edition.race_entries.eager_load(:racer)
     paid_filter = params[:filter] && (params[:filter][:paid] == 'true')
@@ -178,7 +205,7 @@ class RaceEditionsController < ApplicationController
   end
 
   def payment_cancelled
-    flash[:success] = "Until you pay, you are not officially in the Rattlesnake Ramble. Please pay via PayPal promptly or contact the race director (bwright@rattlesnakeramble.org)."
+    flash[:success] = "Until you pay, you are not officially in the Rattlesnake Ramble. Please complete payment via PayPal or Venmo promptly, or contact the race director (bwright@rattlesnakeramble.org)."
     redirect_to race_edition_path(@race_edition)
   end
 

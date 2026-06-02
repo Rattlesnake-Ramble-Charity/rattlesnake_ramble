@@ -20,6 +20,9 @@ Rails.application.routes.draw do
     member do
       get 'enter'
       post 'create_entry'
+      get 'checkout'
+      post 'create_paypal_order'
+      post 'capture_paypal_order'
       get 'racer_emails'
       get 'racer_info_csv'
       get 'race_entries'

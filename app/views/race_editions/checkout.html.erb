@@ -1,0 +1,46 @@
+<%= render 'shared/page_title', title: "Complete Your Registration" %>
+
+<div class="well">
+  <h3><%= @race_edition.name %></h3>
+  <p><strong>Racer:</strong> <%= @racer.first_name %> <%= @racer.last_name %></p>
+  <p><strong>Total:</strong> $<%= @total %></p>
+</div>
+
+<p>Choose how you'd like to pay:</p>
+
+<div id="paypal-button-container"></div>
+
+<script src="https://www.paypal.com/sdk/js?client-id=<%= Rails.application.secrets.paypal_client_id %>&enable-funding=venmo&currency=USD"></script>
+<script>
+  paypal.Buttons({
+    createOrder: function() {
+      return fetch('<%= create_paypal_order_race_edition_path(@race_edition) %>', {
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) { return data.order_id; });
+    },
+    onApprove: function(data) {
+      return fetch('<%= capture_paypal_order_race_edition_path(@race_edition) %>', {
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ order_id: data.orderID })
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) { window.location.href = data.redirect_url; });
+    },
+    onCancel: function() {
+      window.location.href = '<%= payment_cancelled_race_edition_path(@race_edition) %>';
+    },
+    onError: function() {
+      alert('Something went wrong with your payment. Please try again or contact bwright@rattlesnakeramble.org.');
+    }
+  }).render('#paypal-button-container');
+</script>
