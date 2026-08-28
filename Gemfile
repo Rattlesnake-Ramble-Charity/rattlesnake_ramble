@@ -9,7 +9,7 @@ end
 
 gem 'rails', '~> 7.1.0'
 gem 'sprockets-rails'
-gem 'puma', '~> 5.6'
+gem 'puma', '~> 7.2'
 gem 'sass-rails', '~> 5.0'
 gem 'bootstrap-sass', '~> 3.4.1'
 gem 'terser'
