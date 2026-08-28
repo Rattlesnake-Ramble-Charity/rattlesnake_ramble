@@ -155,6 +155,22 @@ class RaceEditionsController < ApplicationController
     @racers = filtered_entries.map(&:racer)
   end
 
+  def recruitment_emails
+    @previous_edition = @race_edition.previous_edition
+
+    if @previous_edition.nil?
+      redirect_to race_editions_path, alert: "No previous edition exists for this race."
+      return
+    end
+
+    # Racers are duplicated across editions, so subtract and dedupe by email
+    current_emails = @race_edition.racers.pluck(:email).to_set
+    @racers = @previous_edition.race_entries.eager_load(:racer)
+                .map(&:racer)
+                .uniq(&:email)
+                .reject { |racer| current_emails.include?(racer.email) }
+  end
+
   def racer_info_csv
   end
 

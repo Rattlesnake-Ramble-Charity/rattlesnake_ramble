@@ -21,6 +21,7 @@ Rails.application.routes.draw do
       get 'enter'
       post 'create_entry'
       get 'racer_emails'
+      get 'recruitment_emails'
       get 'racer_info_csv'
       get 'race_entries'
       get 'payment_success'

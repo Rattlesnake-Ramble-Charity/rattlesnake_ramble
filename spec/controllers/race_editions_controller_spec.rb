@@ -125,4 +125,82 @@ RSpec.describe RaceEditionsController do
       end
     end
   end
+
+  describe "#recruitment_emails" do
+    include Devise::Test::ControllerHelpers
+
+    let(:make_request) { get :recruitment_emails, params: { id: current_edition.friendly_id } }
+
+    let(:odd_years_race) { FactoryBot.create(:race, :odd_years) }
+    let(:even_years_race) { FactoryBot.create(:race, :even_years) }
+    let(:kids_race) { FactoryBot.create(:race, :kids_race) }
+
+    let!(:current_edition) { FactoryBot.create(:race_edition, race: odd_years_race, date: "2025-09-20") }
+    let!(:previous_edition) { FactoryBot.create(:race_edition, race: even_years_race, date: "2024-09-21") }
+
+    # The navigation layout requires a kids edition to exist; dated between the
+    # two full-course editions, it also proves the previous-edition lookup
+    # does not leak across race categories
+    let!(:kids_edition) { FactoryBot.create(:race_edition, race: kids_race, date: "2025-06-01") }
+
+    context "when not signed in" do
+      it "redirects to the sign-in page" do
+        make_request
+        expect(response).to redirect_to(new_user_session_path)
+      end
+    end
+
+    context "when signed in" do
+      let(:user) { FactoryBot.create(:user) }
+
+      before { sign_in user }
+
+      context "when a previous edition exists" do
+        let!(:returning_entry) do
+          FactoryBot.create(:race_entry, race_edition: previous_edition, racer: FactoryBot.create(:racer, email: "returning@example.com"))
+        end
+
+        it "returns a successful response listing the previous edition's racer emails" do
+          make_request
+          expect(response.status).to eq(200)
+          expect(response.body).to include("returning@example.com")
+        end
+
+        it "excludes racers already entered in the current edition, matching by email rather than racer id" do
+          FactoryBot.create(:race_entry, race_edition: previous_edition, racer: FactoryBot.create(:racer, email: "repeat@example.com"))
+          FactoryBot.create(:race_entry, race_edition: current_edition, racer: FactoryBot.create(:racer, email: "repeat@example.com"))
+
+          make_request
+          expect(response.body).to include("returning@example.com")
+          expect(response.body).not_to include("repeat@example.com")
+        end
+
+        it "lists a duplicated email only once" do
+          FactoryBot.create(:race_entry, race_edition: previous_edition, racer: FactoryBot.create(:racer, email: "dupe@example.com"))
+          FactoryBot.create(:race_entry, race_edition: previous_edition, racer: FactoryBot.create(:racer, email: "dupe@example.com"))
+
+          make_request
+          expect(response.body.scan("dupe@example.com").size).to eq(1)
+        end
+
+        it "ignores kids race editions when finding the previous full course edition" do
+          FactoryBot.create(:race_entry, race_edition: kids_edition, racer: FactoryBot.create(:racer, email: "kids-parent@example.com"))
+
+          make_request
+          expect(response.body).to include("returning@example.com")
+          expect(response.body).not_to include("kids-parent@example.com")
+        end
+      end
+
+      context "when no previous edition exists" do
+        before { previous_edition.destroy }
+
+        it "redirects with an alert" do
+          make_request
+          expect(response).to redirect_to(race_editions_path)
+          expect(flash[:alert]).to eq("No previous edition exists for this race.")
+        end
+      end
+    end
+  end
 end
