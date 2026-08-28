@@ -164,11 +164,7 @@ class RaceEditionsController < ApplicationController
     end
 
     # Racers are duplicated across editions, so subtract and dedupe by email
-    current_emails = @race_edition.racers.pluck(:email).to_set
-    @racers = @previous_edition.race_entries.eager_load(:racer)
-                .map(&:racer)
-                .uniq(&:email)
-                .reject { |racer| current_emails.include?(racer.email) }
+    @emails = @previous_edition.racers.pluck(:email).uniq - @race_edition.racers.pluck(:email)
   end
 
   def racer_info_csv
