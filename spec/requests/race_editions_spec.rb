@@ -2,13 +2,11 @@
 
 require "rails_helper"
 
-RSpec.describe RaceEditionsController do
-  render_views
-
+RSpec.describe "RaceEditions" do
   before { FactoryBot.create(:user, email: "other@example.com", password: "password") }
 
-  describe "#index" do
-    let(:make_request) { get :index, format: :json, params: params }
+  describe "GET /race_editions.json" do
+    let(:make_request) { get race_editions_path(format: :json), params: params }
     let(:params) { {} }
 
     before { FactoryBot.create_list(:race_edition, 2) }
@@ -45,13 +43,9 @@ RSpec.describe RaceEditionsController do
     end
   end
 
-  describe "#show" do
-    let(:make_request) { get :show, format: :json, params: params }
-    let(:params) do
-      {
-        id: race_edition.id,
-      }
-    end
+  describe "GET /race_editions/:id.json" do
+    let(:make_request) { get race_edition_path(race_edition.id, format: :json), params: params }
+    let(:params) { {} }
 
     let!(:race_edition) do
       FactoryBot.create(
@@ -84,7 +78,6 @@ RSpec.describe RaceEditionsController do
     context "with valid credentials" do
       let(:params) do
         {
-          id: race_edition.id,
           user: {
             email: "other@example.com",
             password: "password",
@@ -126,11 +119,9 @@ RSpec.describe RaceEditionsController do
     end
   end
 
-  describe "#racer_emails" do
-    include Devise::Test::ControllerHelpers
-
-    let(:make_request) { get :racer_emails, params: params }
-    let(:params) { { id: race_edition.friendly_id } }
+  describe "GET /race_editions/:id/racer_emails" do
+    let(:make_request) { get racer_emails_race_edition_path(race_edition), params: params }
+    let(:params) { {} }
 
     let!(:race_edition) { FactoryBot.create(:race_edition, :full_course, date: "2025-09-20") }
 
@@ -163,7 +154,7 @@ RSpec.describe RaceEditionsController do
       end
 
       context "with a paid filter" do
-        let(:params) { { id: race_edition.friendly_id, filter: { paid: "true" } } }
+        let(:params) { { filter: { paid: "true" } } }
 
         it "lists emails for paid entries only" do
           make_request
@@ -173,7 +164,7 @@ RSpec.describe RaceEditionsController do
       end
 
       context "with an unpaid filter" do
-        let(:params) { { id: race_edition.friendly_id, filter: { paid: "false" } } }
+        let(:params) { { filter: { paid: "false" } } }
 
         it "lists emails for unpaid entries only" do
           make_request
@@ -184,10 +175,8 @@ RSpec.describe RaceEditionsController do
     end
   end
 
-  describe "#recruitment_emails" do
-    include Devise::Test::ControllerHelpers
-
-    let(:make_request) { get :recruitment_emails, params: { id: current_edition.friendly_id } }
+  describe "GET /race_editions/:id/recruitment_emails" do
+    let(:make_request) { get recruitment_emails_race_edition_path(current_edition) }
 
     let(:odd_years_race) { FactoryBot.create(:race, :odd_years) }
     let(:even_years_race) { FactoryBot.create(:race, :even_years) }
