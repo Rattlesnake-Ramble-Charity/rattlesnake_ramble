@@ -39,8 +39,8 @@ jobs:
       with:
         bundler-cache: true
 
-    - name: Set up database and run migrations
-      run: bin/rails db:setup RAILS_ENV=test
+    - name: Set up database
+      run: bin/rails db:create db:schema:load RAILS_ENV=test
 
     - name: Run tests
       run: bundle exec rake
