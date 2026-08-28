@@ -126,6 +126,64 @@ RSpec.describe RaceEditionsController do
     end
   end
 
+  describe "#racer_emails" do
+    include Devise::Test::ControllerHelpers
+
+    let(:make_request) { get :racer_emails, params: params }
+    let(:params) { { id: race_edition.friendly_id } }
+
+    let!(:race_edition) { FactoryBot.create(:race_edition, :full_course, date: "2025-09-20") }
+
+    # The navigation layout requires a kids edition to exist
+    let!(:kids_edition) { FactoryBot.create(:race_edition, :kids_race, date: "2025-06-01") }
+
+    let!(:paid_entry) do
+      FactoryBot.create(:race_entry, race_edition: race_edition, paid: true, racer: FactoryBot.create(:racer, email: "alice@example.com"))
+    end
+
+    let!(:unpaid_entry) do
+      FactoryBot.create(:race_entry, race_edition: race_edition, paid: false, racer: FactoryBot.create(:racer, email: "bob@example.com"))
+    end
+
+    context "when not signed in" do
+      it "redirects to the sign-in page" do
+        make_request
+        expect(response).to redirect_to(new_user_session_path)
+      end
+    end
+
+    context "when signed in" do
+      before { sign_in FactoryBot.create(:user) }
+
+      it "lists emails for all entries when no filter is given" do
+        make_request
+        expect(response.status).to eq(200)
+        expect(response.body).to include("alice@example.com")
+        expect(response.body).to include("bob@example.com")
+      end
+
+      context "with a paid filter" do
+        let(:params) { { id: race_edition.friendly_id, filter: { paid: "true" } } }
+
+        it "lists emails for paid entries only" do
+          make_request
+          expect(response.body).to include("alice@example.com")
+          expect(response.body).not_to include("bob@example.com")
+        end
+      end
+
+      context "with an unpaid filter" do
+        let(:params) { { id: race_edition.friendly_id, filter: { paid: "false" } } }
+
+        it "lists emails for unpaid entries only" do
+          make_request
+          expect(response.body).to include("bob@example.com")
+          expect(response.body).not_to include("alice@example.com")
+        end
+      end
+    end
+  end
+
   describe "#recruitment_emails" do
     include Devise::Test::ControllerHelpers
 
