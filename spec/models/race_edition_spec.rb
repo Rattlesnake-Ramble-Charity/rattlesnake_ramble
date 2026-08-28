@@ -89,4 +89,41 @@ RSpec.describe RaceEdition, type: :model do
       expect(build_stubbed(:race_edition, :full_course)).not_to be_kids_race
     end
   end
+
+  describe '#previous_edition' do
+    subject(:edition) { create(:race_edition, race: odd_years_race, date: '2025-09-20') }
+
+    let(:odd_years_race) { create(:race, :odd_years) }
+    let(:even_years_race) { create(:race, :even_years) }
+    let(:kids_race) { create(:race, :kids_race) }
+
+    it 'returns the most recent earlier full course edition, crossing race records' do
+      create(:race_edition, race: odd_years_race, date: '2023-09-16')
+      most_recent_previous = create(:race_edition, race: even_years_race, date: '2024-09-21')
+
+      expect(edition.previous_edition).to eq(most_recent_previous)
+    end
+
+    it 'ignores kids race editions and later editions' do
+      create(:race_edition, race: kids_race, date: '2025-06-01')
+      create(:race_edition, race: even_years_race, date: '2026-09-19')
+
+      expect(edition.previous_edition).to be_nil
+    end
+
+    it 'returns nil when no earlier edition exists' do
+      expect(edition.previous_edition).to be_nil
+    end
+
+    context 'for a kids race edition' do
+      subject(:edition) { create(:race_edition, race: kids_race, date: '2025-09-20') }
+
+      it 'returns the most recent earlier kids edition, ignoring full course editions' do
+        create(:race_edition, race: even_years_race, date: '2025-06-07')
+        previous_kids_edition = create(:race_edition, race: kids_race, date: '2024-09-21')
+
+        expect(edition.previous_edition).to eq(previous_kids_edition)
+      end
+    end
+  end
 end

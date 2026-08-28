@@ -5,6 +5,6 @@
 <%= link_to 'Unpaid', racer_emails_race_edition_path(@race_edition, filter: {paid: 'false'}), class: 'btn btn-primary' %>
 <hr/>
 
-<%= render 'racers/emails', racers: @racers %>
+<%= render 'racers/emails', emails: @racers.map(&:email) %>
 
 <h5><%= link_to 'Return to Races Listing', races_path, class: 'btn btn-warning btn-small' %></h5>

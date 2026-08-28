@@ -40,6 +40,14 @@ class RaceEdition < ActiveRecord::Base
     race&.name == KIDS_RACE_NAME
   end
 
+  # The most recent earlier edition of the same category (kids or full course).
+  # The full course alternates between two Race records, so we search by
+  # category rather than race_id.
+  def previous_edition
+    scope = kids_race? ? RaceEdition.kids_race : RaceEdition.full_course
+    scope.where("date < ?", date).order(date: :desc).first
+  end
+
   def assign_next_bib_number_for!(racer)
     column = bib_number_column_for(racer)
     next_bib_number = public_send(column)

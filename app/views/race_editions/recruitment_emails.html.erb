@@ -1,0 +1,7 @@
+<%= render 'shared/page_title', title: "Recruitment emails for #{@race_edition.date}" %>
+
+<p><%= @emails.size %> racers from the <%= @previous_edition.date %> edition who are not entered in the <%= @race_edition.date %> edition:</p>
+
+<%= render 'racers/emails', emails: @emails %>
+
+<h5><%= link_to 'Return to Races Listing', races_path, class: 'btn btn-warning btn-small' %></h5>
