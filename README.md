@@ -75,6 +75,16 @@ Follow the instructions for automatically starting postgres when you start your 
 
 > `$ bundle exec rspec`
 
+## Running the app locally
+
+```bash
+bin/dev
+```
+
+This installs [foreman](https://github.com/ddollar/foreman) if needed and starts
+the processes defined in `Procfile.dev`. The app will be available at
+http://localhost:3000.
+
 ## Deployment instruction
 
 ### Installing the Heroku CLI
