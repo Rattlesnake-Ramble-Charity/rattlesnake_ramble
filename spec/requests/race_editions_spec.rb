@@ -119,6 +119,70 @@ RSpec.describe "RaceEditions" do
     end
   end
 
+  describe "POST /race_editions/:id/create_entry" do
+    let(:make_request) { post create_entry_race_edition_path(race_edition), params: params }
+
+    let!(:race_edition) do
+      FactoryBot.create(:race_edition, :full_course, date: "2026-09-12", selling_merchandise: selling_merchandise, merchandise_price: 25)
+    end
+
+    let(:selling_merchandise) { false }
+
+    # The navigation layout requires a kids edition to exist
+    let!(:kids_edition) { FactoryBot.create(:race_edition, :kids_race, date: "2026-06-06") }
+
+    let(:racer_attributes) do
+      {
+        first_name: "Jane",
+        last_name: "Doe",
+        email: "jane.doe@example.com",
+        gender: "female",
+        birth_date: "1980-01-01",
+        city: "Boulder",
+        state: "CO",
+      }
+    end
+
+    context "when the edition is not selling merchandise and no race entry attributes are submitted" do
+      let(:params) { { race_edition: { racers_attributes: { "0" => racer_attributes } } } }
+
+      it "creates the racer and redirects to payment" do
+        expect { make_request }.to change(Racer, :count).by(1)
+        expect(response).to have_http_status(:redirect)
+        expect(response.location).to include("cgi-bin/webscr")
+      end
+    end
+
+    context "when the edition is selling merchandise and a size is chosen" do
+      let(:selling_merchandise) { true }
+
+      let(:params) do
+        {
+          race_edition: {
+            racers_attributes: { "0" => racer_attributes },
+            race_entries_attributes: { "0" => { merchandise_size: "Men M" } },
+          }
+        }
+      end
+
+      it "creates the racer and redirects to payment" do
+        expect { make_request }.to change(Racer, :count).by(1)
+        expect(response).to have_http_status(:redirect)
+        expect(response.location).to include("cgi-bin/webscr")
+        expect(response.location).to include("merchandise_size%3DMen+M")
+      end
+    end
+
+    context "when the racer is invalid" do
+      let(:params) { { race_edition: { racers_attributes: { "0" => racer_attributes.merge(email: "") } } } }
+
+      it "does not create a racer and re-renders the entry form" do
+        expect { make_request }.not_to change(Racer, :count)
+        expect(response).to have_http_status(:ok)
+      end
+    end
+  end
+
   describe "GET /race_editions/:id/racer_emails" do
     let(:make_request) { get racer_emails_race_edition_path(race_edition), params: params }
     let(:params) { {} }
