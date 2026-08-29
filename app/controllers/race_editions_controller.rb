@@ -65,8 +65,9 @@ class RaceEditionsController < ApplicationController
   def create_entry
     @racer = Racer.new(obj_params[:racers_attributes]['0'])
 
-    # capture race-entry attributes the form collected (e.g., merchandise_size)
-    provided_race_entry_attributes = obj_params[:race_entries_attributes]['0'] || {}
+    # capture race-entry attributes the form collected (e.g., merchandise_size);
+    # absent entirely when the edition is not selling merchandise
+    provided_race_entry_attributes = obj_params.dig(:race_entries_attributes, '0') || {}
     merch_size = provided_race_entry_attributes['merchandise_size'].presence
 
     if @racer.save
