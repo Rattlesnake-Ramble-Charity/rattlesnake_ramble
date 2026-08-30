@@ -29,7 +29,7 @@ module Paypal
 
     def initialize(raw_post:)
       @raw_post = raw_post
-      @fields = Rack::Utils.parse_query(raw_post)
+      @fields = normalize_encoding(Rack::Utils.parse_query(raw_post))
       @entry_created = false
     end
 
@@ -155,6 +155,38 @@ module Paypal
       nil
     end
 
+    # PayPal encodes IPN values in windows-1252 unless the account is
+    # configured for UTF-8; the message declares its encoding in the charset
+    # field. Values must be valid UTF-8 before they reach Postgres.
+    def normalize_encoding(fields)
+      encoding = declared_encoding(fields)
+      fields.transform_values { |value| normalize_value(value, encoding) }
+    end
+
+    def declared_encoding(fields)
+      name = fields["charset"].to_s
+      return nil if name.empty?
+
+      encoding = Encoding.find(name)
+      encoding == Encoding::UTF_8 ? nil : encoding
+    rescue ArgumentError
+      nil
+    end
+
+    def normalize_value(value, encoding)
+      return value unless value.is_a?(String)
+
+      utf8_value = encoding ? value.dup.force_encoding(encoding).encode(Encoding::UTF_8) : value
+      utf8_value.valid_encoding? ? utf8_value : utf8_value.scrub
+    rescue EncodingError
+      value.scrub
+    end
+
+    def storable_raw_post
+      utf8_value = raw_post.dup.force_encoding(Encoding::UTF_8)
+      utf8_value.valid_encoding? ? utf8_value : utf8_value.scrub
+    end
+
     def message_attributes
       {
         txn_id: txn_id,
@@ -171,7 +203,7 @@ module Paypal
         receiver_email: fields["receiver_email"],
         business: fields["business"],
         test_ipn: fields["test_ipn"] == "1",
-        raw_post: raw_post,
+        raw_post: storable_raw_post,
         verification_status: "pending",
       }
     end

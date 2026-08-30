@@ -108,6 +108,28 @@ RSpec.describe Paypal::ProcessIpn do
     end
   end
 
+  context "when the message is encoded in windows-1252" do
+    # PayPal's default account encoding; "José" arrives as Jos%E9
+    let(:ipn_fields) { super().except(:first_name).merge(charset: "windows-1252") }
+    let(:raw_post) { "#{super()}&first_name=Jos%E9" }
+
+    it "transcodes values to UTF-8 and processes normally" do
+      expect { subject }.to change(RaceEntry, :count).by(1)
+      expect(subject.ipn_message.first_name).to eq("José")
+      expect(subject.ipn_message.processing_result).to eq("race_entry_created")
+    end
+  end
+
+  context "when a value contains invalid bytes and no charset is declared" do
+    let(:ipn_fields) { super().except(:last_name) }
+    let(:raw_post) { "#{super()}&last_name=Sm%E9th" }
+
+    it "scrubs the invalid bytes and processes normally" do
+      expect { subject }.to change(RaceEntry, :count).by(1)
+      expect(subject.ipn_message.last_name).to eq("Sm�th")
+    end
+  end
+
   context "when the message has no txn_id" do
     let(:ipn_fields) { { payment_status: "Completed" } }
 
