@@ -35,6 +35,14 @@ RSpec.describe Paypal::IpnMessage, type: :model do
     end
   end
 
+  describe "#inspect" do
+    it "shows money columns as plain decimals rather than e-notation" do
+      message = build(:paypal_ipn_message, mc_gross: 45.00, mc_fee: 1.61)
+      expect(message.inspect).to include("mc_gross: 45.0")
+      expect(message.inspect).to include("mc_fee: 1.61")
+    end
+  end
+
   describe "#verified?" do
     it "is true only when verification_status is verified" do
       expect(build(:paypal_ipn_message, verification_status: "verified")).to be_verified
