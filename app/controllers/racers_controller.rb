@@ -2,7 +2,18 @@ class RacersController < ApplicationController
   before_action :authenticate_user!
 
   def index
-    @racers = Racer.all
+    @full_course_edition = helpers.current_full_course_edition
+    @kids_course_edition = helpers.current_kids_course_edition
+
+    # racers older than the last race edition belong to a previous signup cycle
+    cutoff_date = [@full_course_edition.previous_edition&.date, @kids_course_edition.previous_edition&.date].compact.min
+    @racers = Racer.includes(race_entries: :race_edition).order(created_at: :desc)
+    @racers = @racers.where("created_at > ?", cutoff_date) if cutoff_date
+
+    @emails_with_current_entries = Racer.joins(:race_entries)
+                                        .where(race_entries: { race_edition_id: [@full_course_edition.id, @kids_course_edition.id] })
+                                        .pluck(:email)
+                                        .to_set
   end
 
   def show
