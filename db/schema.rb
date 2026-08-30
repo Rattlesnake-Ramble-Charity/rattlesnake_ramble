@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_03_13_180000) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_29_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -24,6 +24,31 @@ ActiveRecord::Schema[7.0].define(version: 2026_03_13_180000) do
     t.index ["slug", "sluggable_type"], name: "index_friendly_id_slugs_on_slug_and_sluggable_type"
     t.index ["sluggable_id"], name: "index_friendly_id_slugs_on_sluggable_id"
     t.index ["sluggable_type"], name: "index_friendly_id_slugs_on_sluggable_type"
+  end
+
+  create_table "paypal_ipn_messages", force: :cascade do |t|
+    t.string "txn_id"
+    t.string "payment_status"
+    t.string "txn_type"
+    t.decimal "mc_gross", precision: 10, scale: 2
+    t.decimal "mc_fee", precision: 10, scale: 2
+    t.string "mc_currency"
+    t.string "invoice"
+    t.string "item_name"
+    t.string "payer_email"
+    t.string "first_name"
+    t.string "last_name"
+    t.string "receiver_email"
+    t.string "business"
+    t.boolean "test_ipn", default: false, null: false
+    t.string "verification_status"
+    t.string "processing_result"
+    t.integer "race_entry_id"
+    t.text "raw_post", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["race_entry_id"], name: "index_paypal_ipn_messages_on_race_entry_id"
+    t.index ["txn_id"], name: "index_paypal_ipn_messages_on_txn_id", unique: true
   end
 
   create_table "product_images", force: :cascade do |t|
@@ -76,6 +101,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_03_13_180000) do
     t.datetime "scheduled_start_time", precision: nil
     t.integer "predicted_time"
     t.string "merchandise_size"
+    t.index ["race_edition_id", "racer_id"], name: "index_race_entries_on_race_edition_id_and_racer_id", unique: true
     t.index ["race_edition_id"], name: "index_race_entries_on_race_edition_id"
     t.index ["racer_id"], name: "index_race_entries_on_racer_id"
   end
