@@ -4,20 +4,54 @@
   <%= link_to "New Racer", new_racer_path, class: "btn btn-success pull-left" %>
 </div>
 
-<% @racers.each do |racer| %>
-  <div class="row">
-    <div class="col-md-1">
-      <section class="racer_info center">
-        <%= gravatar_for racer, size: 80 %>
-      </section>
-    </div>
+<table class="table">
+  <tr>
+    <th>Racer</th>
+    <th>Email</th>
+    <th>Created</th>
+    <th>Entry</th>
+    <th>Paid?</th>
+    <th>Actions</th>
+  </tr>
 
-    <div class="col-lg-8 well">
-      <h4><%= link_to racer.first_name + ' ' + racer.last_name, racer_path(racer) %></h4>
-      <p>
-        <span class='quiet'><small> <%= time_ago_in_words(racer.created_at) %></small></span>
-      </p>
-    </div>
-  </div>
-  <hr/>
-<% end %>
+  <% full_course_cutoff = @full_course_edition.previous_edition&.date %>
+  <% kids_course_cutoff = @kids_course_edition.previous_edition&.date %>
+
+  <% @racers.each do |racer| %>
+    <% race_entry = racer.race_entries.first %>
+    <tr>
+      <td><%= link_to "#{racer.first_name} #{racer.last_name}", racer_path(racer) %></td>
+      <td><%= racer.email %></td>
+      <td><%= time_ago_in_words(racer.created_at) %> ago</td>
+      <td><%= race_entry&.race_edition&.name %></td>
+      <td><%= race_entry.nil? ? "" : race_entry.paid %></td>
+      <td>
+        <% if race_entry %>
+          <%= button_to race_entry.paid ? "Mark Unpaid" : "Mark Paid",
+                        race_entry_path(race_entry),
+                        method: :patch,
+                        params: { race_entry: { paid: (!race_entry.paid).to_s }, return_to: racers_path },
+                        class: "btn btn-warning btn-sm" %>
+        <% else %>
+          <% if full_course_cutoff.nil? || racer.created_at.to_date > full_course_cutoff %>
+            <%= button_to "Add to Full Course",
+                          race_entries_path,
+                          params: { race_entry: { racer_id: racer.id, race_edition_id: @full_course_edition.id } },
+                          class: "btn btn-success btn-sm",
+                          form: { data: { confirm: "Create a paid Full Course entry for #{racer.first_name} #{racer.last_name} and send the confirmation email?" } } %>
+          <% end %>
+          <% if kids_course_cutoff.nil? || racer.created_at.to_date > kids_course_cutoff %>
+            <%= button_to "Add to Kids Course",
+                          race_entries_path,
+                          params: { race_entry: { racer_id: racer.id, race_edition_id: @kids_course_edition.id } },
+                          class: "btn btn-success btn-sm",
+                          form: { data: { confirm: "Create a paid Kids Course entry for #{racer.first_name} #{racer.last_name} and send the confirmation email?" } } %>
+          <% end %>
+          <% if @emails_with_current_entries.include?(racer.email) %>
+            <span class="text-danger"><small>another racer record with this email is already entered</small></span>
+          <% end %>
+        <% end %>
+      </td>
+    </tr>
+  <% end %>
+</table>

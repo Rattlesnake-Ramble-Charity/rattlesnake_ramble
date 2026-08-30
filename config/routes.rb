@@ -31,7 +31,7 @@ Rails.application.routes.draw do
     end
   end
   
-  resources :race_entries, except: [:index, :show, :new, :create] do
+  resources :race_entries, except: [:index, :show, :new] do
     member do
       get 'successful_entry'  
       get 'cancelled_payment'
