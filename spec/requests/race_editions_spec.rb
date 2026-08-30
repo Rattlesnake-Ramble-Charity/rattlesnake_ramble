@@ -2,6 +2,9 @@
 
 require "rails_helper"
 
+RSpec::Matchers.define_negated_matcher :not_change, :change
+RSpec::Matchers.define_negated_matcher :not_have_enqueued_mail, :have_enqueued_mail
+
 RSpec.describe "RaceEditions" do
   before { FactoryBot.create(:user, email: "other@example.com", password: "password") }
 
@@ -150,6 +153,7 @@ RSpec.describe "RaceEditions" do
         expect { make_request }.to change(Racer, :count).by(1)
         expect(response).to have_http_status(:redirect)
         expect(response.location).to include("cgi-bin/webscr")
+        expect(response.location).to include("notify_url=http%3A%2F%2Fwww.example.com%2Fwebhooks%2Fpaypal_ipns")
       end
     end
 
@@ -179,6 +183,62 @@ RSpec.describe "RaceEditions" do
       it "does not create a racer and re-renders the entry form" do
         expect { make_request }.not_to change(Racer, :count)
         expect(response).to have_http_status(:ok)
+      end
+    end
+  end
+
+  describe "GET /race_editions/:id/payment_success" do
+    let(:make_request) do
+      get payment_success_race_edition_path(race_edition), params: { racer_id: racer.id, merchandise_size: merchandise_size }
+    end
+
+    let(:merchandise_size) { nil }
+
+    let!(:race_edition) do
+      FactoryBot.create(:race_edition, :full_course, date: "2026-09-12", selling_merchandise: true, merchandise_price: 25)
+    end
+
+    let!(:racer) { FactoryBot.create(:racer, :female) }
+
+    context "when no entry exists yet" do
+      it "creates a paid entry and sends the acknowledgment" do
+        expect { make_request }.to change(RaceEntry, :count).by(1)
+          .and have_enqueued_mail(RaceMailer, :payment_acknowledgment)
+
+        entry = RaceEntry.last
+        expect(entry.racer).to eq(racer)
+        expect(entry.paid).to eq(true)
+        expect(response).to redirect_to(race_edition_path(race_edition))
+      end
+    end
+
+    context "when the IPN listener already created the entry" do
+      let!(:existing_entry) do
+        FactoryBot.create(:race_entry, race_edition: race_edition, racer: racer, paid: true, merchandise_size: nil)
+      end
+
+      let(:merchandise_size) { "Men M" }
+
+      it "backfills the merchandise size without creating a duplicate or re-sending the acknowledgment" do
+        expect { make_request }.to not_change(RaceEntry, :count)
+          .and not_have_enqueued_mail(RaceMailer, :payment_acknowledgment)
+
+        expect(existing_entry.reload.merchandise_size).to eq("Men M")
+        expect(existing_entry.paid).to eq(true)
+        expect(response).to redirect_to(race_edition_path(race_edition))
+      end
+    end
+
+    context "when the entry already has a merchandise size" do
+      let!(:existing_entry) do
+        FactoryBot.create(:race_entry, race_edition: race_edition, racer: racer, paid: true, merchandise_size: "Women S")
+      end
+
+      let(:merchandise_size) { "Men M" }
+
+      it "does not overwrite the size" do
+        make_request
+        expect(existing_entry.reload.merchandise_size).to eq("Women S")
       end
     end
   end

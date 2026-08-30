@@ -20,4 +20,8 @@ module RambleConfig
   def self.ost_url
     ENV["OST_URL"].presence || "https://www.opensplittime.org"
   end
+
+  def self.paypal_business_email
+    ENV["PAYPAL_BUSINESS_EMAIL"].presence || "bwright@rattlesnakeramble.org"
+  end
 end
