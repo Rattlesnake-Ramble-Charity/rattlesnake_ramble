@@ -7,7 +7,6 @@ module Paypal
   # once and produce no additional side effects.
   class ProcessIpn
     INVOICE_PATTERN = /\ARaceEdition(\d+)-Racer(\d+)\z/
-    ATTENTION_RESULTS = %w[created_merch_size_unknown amount_mismatch invoice_unrecognized receiver_mismatch].freeze
 
     Result = Struct.new(:ipn_message, :race_entry, :entry_created, :retryable_error, :attention_needed, keyword_init: true) do
       def entry_created?
@@ -50,7 +49,7 @@ module Paypal
         ipn_message: message,
         race_entry: race_entry,
         entry_created: entry_created,
-        attention_needed: ATTENTION_RESULTS.include?(message.processing_result)
+        attention_needed: message.needs_attention?
       )
     end
 

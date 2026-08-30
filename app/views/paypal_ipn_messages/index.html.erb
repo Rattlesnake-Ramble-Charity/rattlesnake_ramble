@@ -1,0 +1,47 @@
+<%= render 'shared/page_title', title: "PayPal IPN Messages" %>
+
+<div class="col-md-12 new-model-button">
+  <% if params[:filter] == "attention" %>
+    <%= link_to "Show All Messages", paypal_ipn_messages_path, class: "btn btn-default pull-left" %>
+  <% else %>
+    <%= link_to "Needs Attention Only", paypal_ipn_messages_path(filter: "attention"), class: "btn btn-warning pull-left" %>
+  <% end %>
+</div>
+
+<table class="table">
+  <tr>
+    <th>Received</th>
+    <th>Payer</th>
+    <th>Amount</th>
+    <th>Payment Status</th>
+    <th>Verification</th>
+    <th>Result</th>
+    <th>Race Entry</th>
+  </tr>
+
+  <% @messages.each do |message| %>
+    <tr>
+      <td><%= link_to "#{time_ago_in_words(message.created_at)} ago", paypal_ipn_message_path(message) %></td>
+      <td>
+        <%= [message.first_name, message.last_name].compact.join(" ") %>
+        <br><small><%= message.payer_email %></small>
+      </td>
+      <td><%= number_to_currency(message.mc_gross) %> <%= message.mc_currency %></td>
+      <td><%= message.payment_status %></td>
+      <td><%= message.verification_status %></td>
+      <td>
+        <% if message.needs_attention? %>
+          <span class="text-danger"><%= message.processing_result.humanize %></span>
+        <% else %>
+          <%= message.processing_result&.humanize %>
+        <% end %>
+      </td>
+      <td>
+        <% if message.race_entry %>
+          <% racer = message.race_entry.racer %>
+          <%= link_to "#{racer.first_name} #{racer.last_name} — #{message.race_entry.race_edition.name}", racer_path(racer) %>
+        <% end %>
+      </td>
+    </tr>
+  <% end %>
+</table>

@@ -1,0 +1,45 @@
+<%= render 'shared/page_title', title: "PayPal IPN Message" %>
+
+<div class="col-md-12 new-model-button">
+  <%= link_to "Back to All Messages", paypal_ipn_messages_path, class: "btn btn-default pull-left" %>
+</div>
+
+<div class="col-md-12">
+  <table class="table">
+    <tr><th>Received</th><td><%= @message.created_at %></td></tr>
+    <tr><th>Transaction ID</th><td><%= @message.txn_id %></td></tr>
+    <tr><th>Transaction Type</th><td><%= @message.txn_type %></td></tr>
+    <tr><th>Payment Status</th><td><%= @message.payment_status %></td></tr>
+    <tr><th>Amount</th><td><%= number_to_currency(@message.mc_gross) %> <%= @message.mc_currency %></td></tr>
+    <tr><th>Fee</th><td><%= number_to_currency(@message.mc_fee) %></td></tr>
+    <tr><th>Invoice</th><td><%= @message.invoice %></td></tr>
+    <tr><th>Item</th><td><%= @message.item_name %></td></tr>
+    <tr><th>Payer</th><td><%= [@message.first_name, @message.last_name].compact.join(" ") %> (<%= @message.payer_email %>)</td></tr>
+    <tr><th>Receiver Email</th><td><%= @message.receiver_email %></td></tr>
+    <tr><th>Business</th><td><%= @message.business %></td></tr>
+    <tr><th>Sandbox Test?</th><td><%= @message.test_ipn %></td></tr>
+    <tr><th>Verification</th><td><%= @message.verification_status %></td></tr>
+    <tr>
+      <th>Result</th>
+      <td>
+        <% if @message.needs_attention? %>
+          <span class="text-danger"><%= @message.processing_result.humanize %></span>
+        <% else %>
+          <%= @message.processing_result&.humanize %>
+        <% end %>
+      </td>
+    </tr>
+    <tr>
+      <th>Race Entry</th>
+      <td>
+        <% if @message.race_entry %>
+          <% racer = @message.race_entry.racer %>
+          <%= link_to "#{racer.first_name} #{racer.last_name} — #{@message.race_entry.race_edition.name}", racer_path(racer) %>
+        <% end %>
+      </td>
+    </tr>
+  </table>
+
+  <h4>Raw Message</h4>
+  <pre><%= @message.raw_post %></pre>
+</div>
