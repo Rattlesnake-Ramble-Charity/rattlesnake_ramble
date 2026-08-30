@@ -24,4 +24,8 @@ module RambleConfig
   def self.paypal_business_email
     ENV["PAYPAL_BUSINESS_EMAIL"].presence || "bwright@rattlesnakeramble.org"
   end
+
+  def self.paypal_ipnpb_host
+    Rails.application.secrets.paypal_ipnpb_host
+  end
 end

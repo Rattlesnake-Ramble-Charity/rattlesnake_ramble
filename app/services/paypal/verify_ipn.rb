@@ -38,7 +38,7 @@ module Paypal
     attr_reader :raw_post
 
     def verification_url
-      "#{Rails.application.secrets.paypal_ipnpb_host}/cgi-bin/webscr"
+      "#{RambleConfig.paypal_ipnpb_host}/cgi-bin/webscr"
     end
   end
 end
