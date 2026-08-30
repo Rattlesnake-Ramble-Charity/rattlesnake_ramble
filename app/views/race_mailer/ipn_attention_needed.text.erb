@@ -1,0 +1,26 @@
+A PayPal payment notification needs follow-up.
+
+Result: <%= @ipn_message.processing_result %>
+Transaction ID: <%= @ipn_message.txn_id %>
+Payment status: <%= @ipn_message.payment_status %>
+Amount: <%= @ipn_message.mc_gross %> <%= @ipn_message.mc_currency %>
+Invoice: <%= @ipn_message.invoice %>
+Payer: <%= @ipn_message.first_name %> <%= @ipn_message.last_name %> (<%= @ipn_message.payer_email %>)
+Received: <%= @ipn_message.created_at %>
+
+<% case @ipn_message.processing_result %>
+<% when "created_merch_size_unknown" %>
+The race entry was created and paid, but the payment amount includes
+merchandise and the merchandise size is not known. Please contact the racer
+to confirm their size.
+<% when "amount_mismatch" %>
+The payment amount does not match the entry fee (with or without
+merchandise), so no race entry was created. Please reconcile against the
+PayPal account and create the entry manually if appropriate.
+<% when "invoice_unrecognized" %>
+The payment's invoice does not identify a race edition and racer, so no race
+entry was created. Please reconcile against the PayPal account.
+<% when "receiver_mismatch" %>
+The payment was addressed to a different receiver email, so no race entry
+was created. This may indicate a misconfigured button or a spoofing attempt.
+<% end %>

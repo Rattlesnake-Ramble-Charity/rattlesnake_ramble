@@ -39,4 +39,8 @@ Rails.application.routes.draw do
   end
   
   resources :products
+
+  namespace :webhooks do
+    resources :paypal_ipns, only: [:create]
+  end
 end

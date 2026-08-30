@@ -26,6 +26,15 @@ class RaceMailer < ApplicationMailer
     )
   end
 
+  def ipn_attention_needed(ipn_message)
+    @ipn_message = ipn_message
+
+    mail(
+      to: RambleConfig.paypal_business_email,
+      subject: "PayPal IPN needs attention: #{ipn_message.processing_result&.humanize&.downcase}"
+    )
+  end
+
   private
 
   def course_name

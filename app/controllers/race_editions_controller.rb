@@ -91,7 +91,7 @@ class RaceEditionsController < ApplicationController
     end
 
     values = {
-      business: "bwright@rattlesnakeramble.org",
+      business: RambleConfig.paypal_business_email,
       cmd: "_xclick",
       upload: 1,
       return: "#{Rails.application.secrets.app_host}#{successful_entry_race_entry_path(race_entry)}",
@@ -120,13 +120,17 @@ class RaceEditionsController < ApplicationController
     total_value += @race_edition.merchandise_price if merch_size.present?
 
     values = {
-      business: "bwright@rattlesnakeramble.org",
+      business: RambleConfig.paypal_business_email,
       cmd: "_xclick",
       upload: 1,
 
       # Return to the RaceEdition, not a RaceEntry (we don’t have an entry yet)
       return: "#{Rails.application.secrets.app_host}#{payment_success_race_edition_path(@race_edition)}?racer_id=#{racer.id}&merchandise_size=#{merch_size}",
       cancel_return: "#{Rails.application.secrets.app_host}#{payment_cancelled_race_edition_path(@race_edition)}",
+
+      # Server-to-server IPN, so the entry gets created even if the buyer
+      # never returns to our site after paying
+      notify_url: "#{Rails.application.secrets.app_host.to_s.chomp('/')}#{webhooks_paypal_ipns_path}",
 
       # Use an invoice that identifies racer + edition (no RaceEntry id yet)
       invoice: "RaceEdition#{@race_edition.id}-Racer#{racer.id}",
@@ -175,18 +179,16 @@ class RaceEditionsController < ApplicationController
     # set_race_edition already ran; we also need the racer
     racer = Racer.find(params[:racer_id])
 
-    attrs = {}
-    attrs[:merchandise_size] = params[:merchandise_size] if params[:merchandise_size].present?
-
-    entry = RaceEntry.create!(
-      race_edition: @race_edition,
-      racer: racer,
-      paid: true,
-      **attrs
-    )
+    # The IPN listener may have created the entry already; it doesn't know the
+    # merchandise size, so backfill it here
+    entry = RaceEntry.find_or_initialize_by(race_edition: @race_edition, racer: racer)
+    newly_created = entry.new_record?
+    entry.paid = true
+    entry.merchandise_size = params[:merchandise_size] if params[:merchandise_size].present? && entry.merchandise_size.blank?
+    entry.save!
 
     flash[:success] = "Get ready to Ramble, because you are entered!"
-    send_payment_ack_and_schedule_reminders(entry)
+    send_payment_ack_and_schedule_reminders(entry) if newly_created
     redirect_to race_edition_path(@race_edition)
   end
 
