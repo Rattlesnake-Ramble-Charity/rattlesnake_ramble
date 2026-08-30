@@ -35,6 +35,24 @@ RSpec.describe Paypal::IpnMessage, type: :model do
     end
   end
 
+  describe ".needs_attention and #needs_attention?" do
+    let!(:created) { create(:paypal_ipn_message, processing_result: "race_entry_created") }
+    let!(:mismatch) { create(:paypal_ipn_message, processing_result: "amount_mismatch") }
+    let!(:merch_unknown) { create(:paypal_ipn_message, processing_result: "created_merch_size_unknown") }
+    let!(:unprocessed) { create(:paypal_ipn_message, processing_result: nil) }
+
+    it "includes only messages with attention-needed results" do
+      expect(described_class.needs_attention).to match_array([mismatch, merch_unknown])
+    end
+
+    it "answers the predicate consistently with the scope" do
+      expect(mismatch).to be_needs_attention
+      expect(merch_unknown).to be_needs_attention
+      expect(created).not_to be_needs_attention
+      expect(unprocessed).not_to be_needs_attention
+    end
+  end
+
   describe "#inspect" do
     it "shows money columns as plain decimals rather than e-notation" do
       message = build(:paypal_ipn_message, mc_gross: 45.00, mc_fee: 1.61)
