@@ -63,7 +63,9 @@ class RaceEditionsController < ApplicationController
   end
 
   def create_entry
-    @racer = Racer.new(obj_params[:racers_attributes]['0'])
+    racer_attributes = obj_params[:racers_attributes]['0'].except(:id)
+    @racer = reusable_racer(racer_attributes) || Racer.new
+    @racer.assign_attributes(racer_attributes)
 
     # capture race-entry attributes the form collected (e.g., merchandise_size);
     # absent entirely when the edition is not selling merchandise
@@ -208,6 +210,23 @@ class RaceEditionsController < ApplicationController
 
 
   private
+
+  # A prior signup attempt that never became an entry: same person (email + name),
+  # no entries anywhere, created during the current signup cycle. Reusing it
+  # prevents duplicate racer rows when someone abandons PayPal and retries.
+  def reusable_racer(attributes)
+    email = attributes[:email].to_s.strip.downcase
+    return nil if email.blank?
+
+    scope = Racer.where.missing(:race_entries)
+                 .where("LOWER(email) = ?", email)
+                 .where("LOWER(first_name) = ? AND LOWER(last_name) = ?",
+                        attributes[:first_name].to_s.strip.downcase,
+                        attributes[:last_name].to_s.strip.downcase)
+    previous_edition_date = @race_edition.previous_edition&.date
+    scope = scope.where("racers.created_at > ?", previous_edition_date) if previous_edition_date
+    scope.order(created_at: :desc).first
+  end
 
   def obj_params
     params.require(:race_edition)

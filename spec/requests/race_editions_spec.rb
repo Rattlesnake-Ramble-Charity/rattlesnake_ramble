@@ -185,6 +185,47 @@ RSpec.describe "RaceEditions" do
         expect(response).to have_http_status(:ok)
       end
     end
+
+    context "when a matching abandoned racer exists" do
+      let(:params) { { race_edition: { racers_attributes: { "0" => racer_attributes } } } }
+
+      let!(:abandoned_racer) do
+        FactoryBot.create(:racer, first_name: "Jane", last_name: "Doe", email: "jane.doe@example.com", city: "Denver")
+      end
+
+      it "reuses the racer, applies the submitted attributes, and redirects to payment" do
+        expect { make_request }.not_to change(Racer, :count)
+        expect(response).to have_http_status(:redirect)
+        expect(response.location).to include("Racer#{abandoned_racer.id}")
+        expect(abandoned_racer.reload.city).to eq("Boulder")
+      end
+
+      it "reuses the racer when the submitted email and name differ only in case" do
+        params[:race_edition][:racers_attributes]["0"] = racer_attributes.merge(first_name: "JANE", email: "Jane.Doe@example.com")
+
+        expect { make_request }.not_to change(Racer, :count)
+        expect(response).to have_http_status(:redirect)
+      end
+
+      it "creates a new racer for a different name on the same email" do
+        params[:race_edition][:racers_attributes]["0"] = racer_attributes.merge(first_name: "Junior")
+
+        expect { make_request }.to change(Racer, :count).by(1)
+      end
+
+      it "creates a new racer when the existing one already has an entry" do
+        FactoryBot.create(:race_entry, racer: abandoned_racer, race_edition: race_edition)
+
+        expect { make_request }.to change(Racer, :count).by(1)
+      end
+
+      it "creates a new racer when the existing one predates the previous edition" do
+        FactoryBot.create(:race_edition, :full_course, date: "2025-09-20")
+        abandoned_racer.update_column(:created_at, Time.zone.parse("2025-05-01 12:00"))
+
+        expect { make_request }.to change(Racer, :count).by(1)
+      end
+    end
   end
 
   describe "GET /race_editions/:id/payment_success" do
