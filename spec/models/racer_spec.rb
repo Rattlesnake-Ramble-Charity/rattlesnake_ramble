@@ -97,6 +97,22 @@ RSpec.describe Racer, type: :model do
       expect(racer).to be_invalid
       expect(racer.errors.full_messages).to include("Birth date can't be in the future")
     end
+
+    it 'rejects birth_dates within the past year, such as the signup date entered by mistake' do
+      racer = build_stubbed(:racer, birth_date: Date.today)
+      expect(racer).to be_invalid
+      expect(racer.errors.full_messages).to include('Birth date is too recent (the racer would be less than 1 year old); please check the year')
+    end
+
+    it 'rejects a birth_date one day short of a year ago' do
+      racer = build_stubbed(:racer, birth_date: Date.today - 1.year + 1.day)
+      expect(racer).to be_invalid
+    end
+
+    it 'permits a birth_date exactly one year ago' do
+      racer = build_stubbed(:racer, birth_date: Date.today - 1.year)
+      expect(racer).to be_valid
+    end
   end
 
   describe 'before_validation callbacks' do
