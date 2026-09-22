@@ -364,11 +364,34 @@ http://www.rattlesnakeramble.org/racers
 
 http://www.rattlesnakeramble.org/race_editions/rattlesnake-ramble-trail-race-on-2019-09-14/racer_info_csv
 
-#### Posting race entries to OpenSplitTime.org
+#### Sharing entrant data with OpenSplitTime.org
 
-1. Set up the event group in OpenSplitTime.org
-2. Make a new rake task for the specific year. There are several examples in `lib/tasks/ost/post_entries.rake`
-3. Run the rake task, then ensure the race entries appear within the new event group in OpenSplitTime.org.
+Race timing and results are handled by [OpenSplitTime.org](https://www.opensplittime.org/organizations/rattlesnake-ramble).
+OpenSplitTime pulls entrant data directly from this app's JSON API (see below) using its own connector,
+so there is nothing to push from this side. Just make sure the OpenSplitTime event group is set up
+for the year and configured to point at the current race editions.
+
+## JSON API
+
+The app exposes a small read-only JSON API, used by OpenSplitTime to import entrants.
+
+| Endpoint                         | Returns                                                                 |
+|----------------------------------|-------------------------------------------------------------------------|
+| `GET /race_editions.json`        | All race editions: `id`, `date`, `race_name`                            |
+| `GET /race_editions/:id.json`    | One race edition with its start times, entry fee, `accepting_entries`, and every race entry (bib number, scheduled start time, and the racer's name, gender, birth date, email, city, and state) |
+
+`:id` may be the numeric id or the friendly slug (for example, `full-course-on-2025-09-20`).
+
+Both endpoints require the email and password of a site user, passed as request parameters:
+
+```bash
+curl "https://www.rattlesnakeramble.org/race_editions.json" \
+  --data-urlencode "user[email]=you@example.com" \
+  --data-urlencode "user[password]=your-password" \
+  --get
+```
+
+A missing or invalid login returns `401` with `{"errors":["Invalid email or password"]}`.
 
 ## Features
 
