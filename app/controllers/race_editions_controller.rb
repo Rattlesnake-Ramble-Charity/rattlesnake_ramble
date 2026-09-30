@@ -96,8 +96,8 @@ class RaceEditionsController < ApplicationController
       business: RambleConfig.paypal_business_email,
       cmd: "_xclick",
       upload: 1,
-      return: "#{Rails.application.secrets.app_host}#{successful_entry_race_entry_path(race_entry)}",
-      cancel_return: "#{Rails.application.secrets.app_host}#{cancelled_payment_race_entry_path(race_entry)}",
+      return: "#{RambleConfig.app_host}#{successful_entry_race_entry_path(race_entry)}",
+      cancel_return: "#{RambleConfig.app_host}#{cancelled_payment_race_entry_path(race_entry)}",
       invoice: "RaceEntry#{race_entry.id}",
       amount: total_value,
       item_name: @race_edition.name,
@@ -109,7 +109,7 @@ class RaceEditionsController < ApplicationController
       no_note: 1,
     }
 
-    paypal_url = "#{Rails.application.secrets.paypal_host}/cgi-bin/webscr?" + values.to_query
+    paypal_url = "#{RambleConfig.paypal_host}/cgi-bin/webscr?" + values.to_query
     Rails.logger.debug "From RaceEditionsController>>paypal_url: #{paypal_url}"
     paypal_url
 
@@ -127,12 +127,12 @@ class RaceEditionsController < ApplicationController
       upload: 1,
 
       # Return to the RaceEdition, not a RaceEntry (we don’t have an entry yet)
-      return: "#{Rails.application.secrets.app_host}#{payment_success_race_edition_path(@race_edition)}?racer_id=#{racer.id}&merchandise_size=#{merch_size}",
-      cancel_return: "#{Rails.application.secrets.app_host}#{payment_cancelled_race_edition_path(@race_edition)}",
+      return: "#{RambleConfig.app_host}#{payment_success_race_edition_path(@race_edition)}?racer_id=#{racer.id}&merchandise_size=#{merch_size}",
+      cancel_return: "#{RambleConfig.app_host}#{payment_cancelled_race_edition_path(@race_edition)}",
 
       # Server-to-server IPN, so the entry gets created even if the buyer
       # never returns to our site after paying
-      notify_url: "#{Rails.application.secrets.app_host.to_s.chomp('/')}#{webhooks_paypal_ipns_path}",
+      notify_url: "#{RambleConfig.app_host.to_s.chomp('/')}#{webhooks_paypal_ipns_path}",
 
       # Use an invoice that identifies racer + edition (no RaceEntry id yet)
       invoice: "RaceEdition#{@race_edition.id}-Racer#{racer.id}",
@@ -147,8 +147,8 @@ class RaceEditionsController < ApplicationController
       no_note: 1,
     }
 
-    # "#{Rails.application.secrets.paypal_host}/cgi-bin/webscr?" + values.to_query
-    paypal_url = "#{Rails.application.secrets.paypal_host}/cgi-bin/webscr?" + values.to_query
+    # "#{RambleConfig.paypal_host}/cgi-bin/webscr?" + values.to_query
+    paypal_url = "#{RambleConfig.paypal_host}/cgi-bin/webscr?" + values.to_query
     Rails.logger.debug "From RaceEditionsController>>paypal_checkout_url_for: #{paypal_url}"
     paypal_url
   end

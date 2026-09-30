@@ -2,7 +2,7 @@ class Racer < ActiveRecord::Base
   include CapitalizeAttributes
 
   has_many :race_entries, dependent: :destroy
-  enum gender: [:male, :female]
+  enum :gender, [:male, :female]
   capitalize_attributes :first_name, :last_name, :city
   strip_attributes collapse_spaces: true
 
