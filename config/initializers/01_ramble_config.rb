@@ -1,6 +1,12 @@
 # frozen_string_literal: true
 
+# Thin accessor layer over config/ramble.yml (per-environment settings)
+# and a few environment variables.
 module RambleConfig
+  def self.settings
+    @settings ||= Rails.application.config_for(:ramble)
+  end
+
   def self.home_time_zone
     "Mountain Time (US & Canada)"
   end
@@ -16,24 +22,16 @@ module RambleConfig
   # Base URL of this site, with a trailing slash. Used to build the return
   # and notify URLs handed to PayPal.
   def self.app_host
-    case Rails.env
-    when "production" then "https://www.rattlesnakeramble.org/"
-    when "test" then "http://www.example.com/"
-    else "http://localhost:3000/"
-    end
+    settings.fetch(:app_host)
   end
 
-  # PayPal checkout host (live in production, sandbox everywhere else).
+  # PayPal checkout host.
   def self.paypal_host
-    Rails.env.production? ? "https://www.paypal.com" : "https://www.sandbox.paypal.com"
+    settings.fetch(:paypal_host)
   end
 
   # PayPal IPN verification host.
   def self.paypal_ipnpb_host
-    case Rails.env
-    when "production" then "https://ipnpb.paypal.com"
-    when "test" then "https://ipnpb.example.com"
-    else "https://ipnpb.sandbox.paypal.com"
-    end
+    settings.fetch(:paypal_ipnpb_host)
   end
 end
