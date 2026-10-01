@@ -6,7 +6,7 @@ Local setup requires the following:
 
 * Ruby version: 3.4
 * Rails version: 7.2
-* PostgreSQL 16 (or compatible version)
+* PostgreSQL 18 (or compatible version)
 
 The exact pinned versions live in `Gemfile`, `Gemfile.lock`, `.ruby-version`,
 and `.tool-versions`.
@@ -63,7 +63,7 @@ asdf install ruby
 
 ##### Using Homebrew on MacOS
 
-> `$ brew install postgresql@16`
+> `$ brew install postgresql@18`
 
 Follow the instructions for automatically starting postgres when you start your machine.
 
