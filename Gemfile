@@ -26,6 +26,9 @@ gem 'strip_attributes', '~> 2.0'
 gem 'devise'
 gem 'capitalize_attributes'
 gem 'pg'
+# json 3 removed options that sprockets 3 (create_additions) and Rails 8.0
+# (quirks_mode) still pass. Revisit once off sprockets 3 and on Rails 8.1.
+gem 'json', '< 3'
 
 group :development, :test do
   gem 'byebug', platforms: [:mri, :windows]
