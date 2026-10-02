@@ -21,19 +21,19 @@ gem 'bootstrap-datepicker-rails', '~> 1.6'
 gem 'american_date', '~> 1.1'
 gem 'friendly_id'
 gem 'rest-client', '~> 2.0'
-gem 'dotenv-rails', '~> 2.2'
-gem 'strip_attributes', '~> 1.8'
+gem 'dotenv-rails', '~> 3.2'
+gem 'strip_attributes', '~> 2.0'
 gem 'devise'
 gem 'capitalize_attributes'
 gem 'pg'
 
 group :development, :test do
-  gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
-  gem 'capybara', '~> 2.13'
+  gem 'byebug', platforms: [:mri, :windows]
+  gem 'capybara', '~> 3.40'
   gem 'selenium-webdriver'
   gem 'rspec-rails'
   gem 'factory_bot_rails'
-  gem 'ffaker', '~> 2.6.0'
+  gem 'ffaker', '~> 2.25'
 end
 
 group :development do
@@ -43,4 +43,4 @@ group :development do
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
-gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
+gem 'tzinfo-data', platforms: [:windows, :jruby]
