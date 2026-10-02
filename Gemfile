@@ -26,6 +26,9 @@ gem 'strip_attributes', '~> 2.0'
 gem 'devise'
 gem 'capitalize_attributes'
 gem 'pg'
+# Rails 8.0 passes the quirks_mode option that json 3 removed (fixed on 8-0-stable
+# and in 8.1). Drop this pin once Rails is past 8.0.5.1.
+gem 'json', '< 3'
 
 group :development, :test do
   gem 'byebug', platforms: [:mri, :windows]
