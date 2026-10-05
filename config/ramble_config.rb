@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 # Thin accessor layer over config/ramble.yml (per-environment settings)
-# and a few environment variables.
+# and a few environment variables. Required from config/application.rb so
+# it is available to the config/environments files.
 module RambleConfig
   def self.settings
     @settings ||= Rails.application.config_for(:ramble)
@@ -23,6 +24,12 @@ module RambleConfig
   # and notify URLs handed to PayPal.
   def self.app_host
     settings.fetch(:app_host)
+  end
+
+  # URL options for helpers used outside a request (mailers), derived from app_host.
+  def self.default_url_options
+    uri = URI.parse(app_host)
+    { host: uri.host, protocol: uri.scheme, port: (uri.port unless uri.port == uri.default_port) }.compact
   end
 
   # PayPal checkout host.

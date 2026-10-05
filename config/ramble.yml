@@ -1,5 +1,5 @@
 # Non-secret, per-environment application settings.
-# Read through RambleConfig (config/initializers/01_ramble_config.rb).
+# Read through RambleConfig (config/ramble_config.rb).
 # Values under `shared` apply to every environment unless overridden.
 
 shared:
