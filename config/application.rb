@@ -6,8 +6,6 @@ require "rails/all"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-require_relative "ramble_config"
-
 module RattlesnakeRamble
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.

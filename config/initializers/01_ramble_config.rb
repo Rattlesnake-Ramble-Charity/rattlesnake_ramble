@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 # Thin accessor layer over config/ramble.yml (per-environment settings)
-# and a few environment variables. Required from config/application.rb so
-# it is available to the config/environments files.
+# and a few environment variables.
 module RambleConfig
   def self.settings
     @settings ||= Rails.application.config_for(:ramble)
@@ -42,3 +41,8 @@ module RambleConfig
     settings.fetch(:paypal_ipnpb_host)
   end
 end
+
+# Mailers build URLs outside a request, so give them the site host. Set here
+# rather than in config/environments because those files load before this one;
+# Action Mailer reads this lazily when it first loads, after all initializers.
+Rails.application.config.action_mailer.default_url_options = RambleConfig.default_url_options
