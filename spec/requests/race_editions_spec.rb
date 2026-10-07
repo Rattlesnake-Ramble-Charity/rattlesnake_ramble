@@ -415,4 +415,39 @@ RSpec.describe "RaceEditions" do
       end
     end
   end
+
+  describe "GET /race_editions/:id with a sort param" do
+    # The navigation layout requires a full course and a kids edition to exist
+    let!(:race_edition) { FactoryBot.create(:race_edition, :full_course, date: "2026-09-12") }
+    let!(:kids_edition) { FactoryBot.create(:race_edition, :kids_race, date: "2026-09-12") }
+    let!(:race_entry) { FactoryBot.create(:race_entry, race_edition: race_edition, racer: FactoryBot.create(:racer, last_name: "Sortable")) }
+
+    it "sorts by an allowed key" do
+      get race_edition_path(race_edition), params: { sort: "age" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Sortable")
+    end
+
+    it "renders with the default order when a crawler re-encodes a sort value" do
+      get "/race_editions/#{race_edition.friendly_id}?sort=racers.birth_date%2Bdesc"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Sortable")
+    end
+
+    it "renders with the default order for arbitrary SQL in the sort param" do
+      get race_edition_path(race_edition), params: { sort: "1; DROP TABLE racers" }
+
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "sorts the admin entries page by an allowed key" do
+      sign_in FactoryBot.create(:user, email: "admin2@example.com")
+      get race_entries_race_edition_path(race_edition), params: { sort: "paid" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Sortable")
+    end
+  end
 end

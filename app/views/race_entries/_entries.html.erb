@@ -1,11 +1,11 @@
 <table class="table">
   <tr>
-    <th><%= link_to 'Racer', request.params.merge(sort: 'racers.last_name') %></th>
-   <th><%= link_to 'Email', request.params.merge(sort: 'racers.email') %></th>
-    <th><%= link_to 'Gender', request.params.merge(sort: 'racers.gender,racers.birth_date desc') %></th>
-    <th><%= link_to 'Age', request.params.merge(sort: 'racers.birth_date desc') %></th>
-    <th><%= link_to 'Bib #', request.params.merge(sort: 'bib_number') %></th>
-<!--    <th><%#= link_to 'Start Time', request.params.merge(sort: 'race_entries.scheduled_start_time,race_entries.bib_number') %></th>-->
+    <th><%= link_to 'Racer', request.params.merge(sort: 'racer') %></th>
+   <th><%= link_to 'Email', request.params.merge(sort: 'email') %></th>
+    <th><%= link_to 'Gender', request.params.merge(sort: 'gender') %></th>
+    <th><%= link_to 'Age', request.params.merge(sort: 'age') %></th>
+    <th><%= link_to 'Bib #', request.params.merge(sort: 'bib') %></th>
+<!--    <th><%#= link_to 'Start Time', request.params.merge(sort: 'start_time') %></th>-->
     <th><%= link_to 'Paid?', request.params.merge(sort: 'paid') %></th>
 <!--    <th><%#= link_to 'Time', request.params.merge(sort: 'time') %></th>-->
     <th><%= link_to 'Merchandise Size', request.params.merge(sort: 'merchandise_size') %></th>
