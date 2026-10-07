@@ -25,12 +25,6 @@ module RambleConfig
     settings.fetch(:app_host)
   end
 
-  # URL options for helpers used outside a request (mailers), derived from app_host.
-  def self.default_url_options
-    uri = URI.parse(app_host)
-    { host: uri.host, protocol: uri.scheme, port: (uri.port unless uri.port == uri.default_port) }.compact
-  end
-
   # PayPal checkout host.
   def self.paypal_host
     settings.fetch(:paypal_host)
@@ -41,8 +35,3 @@ module RambleConfig
     settings.fetch(:paypal_ipnpb_host)
   end
 end
-
-# Mailers build URLs outside a request, so give them the site host. Set here
-# rather than in config/environments because those files load before this one;
-# Action Mailer reads this lazily when it first loads, after all initializers.
-Rails.application.config.action_mailer.default_url_options = RambleConfig.default_url_options
