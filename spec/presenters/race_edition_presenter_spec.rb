@@ -33,4 +33,71 @@ RSpec.describe RaceEditionPresenter do
       end
     end
   end
+
+  describe '#sorted_race_entries' do
+    subject { RaceEditionPresenter.new(race_edition, params) }
+    let(:race_edition) { FactoryBot.create(:race_edition, :full_course, date: '2026-09-12') }
+    let(:params) { {} }
+
+    let!(:young) { FactoryBot.create(:race_entry, race_edition: race_edition, bib_number: 3, racer: FactoryBot.create(:racer, last_name: 'Young', birth_date: '2005-01-01')) }
+    # Racer capitalizes last_name on save; set a lowercase one directly so the
+    # case-insensitive ordering is actually exercised.
+    let!(:middle) do
+      FactoryBot.create(:race_entry, race_edition: race_edition, bib_number: 1, racer: FactoryBot.create(:racer, last_name: 'Abbott', birth_date: '1985-01-01'))
+        .tap { |entry| entry.racer.update_column(:last_name, 'abbott') }
+    end
+    let!(:old) { FactoryBot.create(:race_entry, race_edition: race_edition, bib_number: 2, racer: FactoryBot.create(:racer, last_name: 'Baker', birth_date: '1965-01-01')) }
+
+    def ordered_last_names
+      subject.sorted_race_entries.map { |entry| entry.racer.last_name }
+    end
+
+    it 'sorts by last name, case-insensitively, when no sort is given' do
+      expect(ordered_last_names).to eq(%w[abbott Baker Young])
+    end
+
+    context 'with an allowed sort key' do
+      let(:params) { { sort: 'age' } }
+
+      it 'applies that order' do
+        expect(ordered_last_names).to eq(%w[Young abbott Baker])
+      end
+    end
+
+    context 'with the bib key' do
+      let(:params) { { sort: 'bib' } }
+
+      it 'orders by bib number' do
+        expect(subject.sorted_race_entries.map(&:bib_number)).to eq([1, 2, 3])
+      end
+    end
+
+    context 'with an unknown sort key' do
+      let(:params) { { sort: 'nonsense' } }
+
+      it 'falls back to the default order' do
+        expect(ordered_last_names).to eq(%w[abbott Baker Young])
+      end
+    end
+
+    context 'with raw SQL in the sort param' do
+      let(:params) { { sort: 'racers.birth_date+desc' } }
+
+      it 'ignores it rather than raising' do
+        expect { subject.sorted_race_entries }.not_to raise_error
+        expect(ordered_last_names).to eq(%w[abbott Baker Young])
+      end
+    end
+  end
+
+  describe '#sort_key' do
+    it 'returns the requested key when allowed' do
+      expect(RaceEditionPresenter.new(race_edition, sort: 'paid').sort_key).to eq('paid')
+    end
+
+    it 'returns the default for blank or unknown keys' do
+      expect(RaceEditionPresenter.new(race_edition, {}).sort_key).to eq('racer')
+      expect(RaceEditionPresenter.new(race_edition, sort: 'DROP TABLE').sort_key).to eq('racer')
+    end
+  end
 end
