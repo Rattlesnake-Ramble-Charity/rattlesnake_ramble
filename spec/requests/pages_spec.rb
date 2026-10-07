@@ -90,6 +90,7 @@ RSpec.describe "Pages" do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Mission Statement")
       expect(response.body).to include('name="cmd" value="_donations"')
+      expect(response.body).to include('name="return" value="http://www.example.com/thanks"')
     end
   end
 

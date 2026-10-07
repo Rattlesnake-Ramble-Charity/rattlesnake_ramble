@@ -154,6 +154,8 @@ RSpec.describe "RaceEditions" do
         expect(response).to have_http_status(:redirect)
         expect(response.location).to include("cgi-bin/webscr")
         expect(response.location).to include("notify_url=http%3A%2F%2Fwww.example.com%2Fwebhooks%2Fpaypal_ipns")
+        expect(response.location).to include("return=http%3A%2F%2Fwww.example.com%2Frace_editions%2F")
+        expect(response.location).to include("cancel_return=http%3A%2F%2Fwww.example.com%2Frace_editions%2F")
       end
     end
 
@@ -173,7 +175,9 @@ RSpec.describe "RaceEditions" do
         expect { make_request }.to change(Racer, :count).by(1)
         expect(response).to have_http_status(:redirect)
         expect(response.location).to include("cgi-bin/webscr")
-        expect(response.location).to include("merchandise_size%3DMen+M")
+        # The size is query-encoded inside the return URL (Men+M), then that URL is
+        # encoded again as PayPal's return param, so the + becomes %2B.
+        expect(response.location).to include("merchandise_size%3DMen%2BM")
       end
     end
 

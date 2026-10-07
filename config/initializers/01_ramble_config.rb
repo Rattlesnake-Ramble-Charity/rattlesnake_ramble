@@ -19,12 +19,6 @@ module RambleConfig
     ENV["PAYPAL_BUSINESS_EMAIL"].presence || "bwright@rattlesnakeramble.org"
   end
 
-  # Base URL of this site, with a trailing slash. Used to build the return
-  # and notify URLs handed to PayPal.
-  def self.app_host
-    settings.fetch(:app_host)
-  end
-
   # PayPal checkout host.
   def self.paypal_host
     settings.fetch(:paypal_host)

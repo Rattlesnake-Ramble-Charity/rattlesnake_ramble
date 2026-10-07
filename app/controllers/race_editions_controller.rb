@@ -96,8 +96,8 @@ class RaceEditionsController < ApplicationController
       business: RambleConfig.paypal_business_email,
       cmd: "_xclick",
       upload: 1,
-      return: "#{RambleConfig.app_host}#{successful_entry_race_entry_path(race_entry)}",
-      cancel_return: "#{RambleConfig.app_host}#{cancelled_payment_race_entry_path(race_entry)}",
+      return: successful_entry_race_entry_url(race_entry),
+      cancel_return: cancelled_payment_race_entry_url(race_entry),
       invoice: "RaceEntry#{race_entry.id}",
       amount: total_value,
       item_name: @race_edition.name,
@@ -127,12 +127,12 @@ class RaceEditionsController < ApplicationController
       upload: 1,
 
       # Return to the RaceEdition, not a RaceEntry (we don’t have an entry yet)
-      return: "#{RambleConfig.app_host}#{payment_success_race_edition_path(@race_edition)}?racer_id=#{racer.id}&merchandise_size=#{merch_size}",
-      cancel_return: "#{RambleConfig.app_host}#{payment_cancelled_race_edition_path(@race_edition)}",
+      return: payment_success_race_edition_url(@race_edition, racer_id: racer.id, merchandise_size: merch_size),
+      cancel_return: payment_cancelled_race_edition_url(@race_edition),
 
       # Server-to-server IPN, so the entry gets created even if the buyer
       # never returns to our site after paying
-      notify_url: "#{RambleConfig.app_host.to_s.chomp('/')}#{webhooks_paypal_ipns_path}",
+      notify_url: webhooks_paypal_ipns_url,
 
       # Use an invoice that identifies racer + edition (no RaceEntry id yet)
       invoice: "RaceEdition#{@race_edition.id}-Racer#{racer.id}",

@@ -6,14 +6,9 @@ shared:
   paypal_host: https://www.sandbox.paypal.com
   paypal_ipnpb_host: https://ipnpb.sandbox.paypal.com
 
-development:
-  app_host: http://localhost:3000/
-
 test:
-  app_host: http://www.example.com/
   paypal_ipnpb_host: https://ipnpb.example.com
 
 production:
-  app_host: https://www.rattlesnakeramble.org/
   paypal_host: https://www.paypal.com
   paypal_ipnpb_host: https://ipnpb.paypal.com
