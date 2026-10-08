@@ -7,7 +7,7 @@ git_source(:github) do |repo_name|
   "https://github.com/#{repo_name}.git"
 end
 
-gem 'rails', '~> 8.0.0'
+gem 'rails', '~> 8.1.0'
 gem 'sprockets-rails'
 gem 'puma', '~> 7.2'
 gem 'sass-rails', '~> 5.0'
@@ -26,8 +26,8 @@ gem 'strip_attributes', '~> 2.0'
 gem 'devise'
 gem 'capitalize_attributes'
 gem 'pg'
-# json 3 removed options that sprockets 3 (create_additions) and Rails 8.0
-# (quirks_mode) still pass. Revisit once off sprockets 3 and on Rails 8.1.
+# json 3 removed the create_additions option that sprockets 3 still passes when
+# reading its manifest. Drop this pin once the app is off sprockets 3.
 gem 'json', '< 3'
 
 group :development, :test do
