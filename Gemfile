@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-ruby '3.4.11'
+ruby '4.0.9'
 
 git_source(:github) do |repo_name|
   repo_name = "#{repo_name}/#{repo_name}" unless repo_name.include?("/")
