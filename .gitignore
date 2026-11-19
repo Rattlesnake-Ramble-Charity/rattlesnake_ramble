@@ -35,3 +35,6 @@
 
 # Ignore environment files that may contain sensitive data
 .env
+
+# Ignore compiled assets from local assets:precompile runs
+/public/assets
